@@ -15,22 +15,22 @@ def multi():
             host = "peoplehub.xboxlive.com"
             port = 443
 
-            # Establish a connection to the host
+            #establish tcp connection the the people hub server
             conn = http.client.HTTPSConnection(host, port)
 
-            # Send the CONNECT request
+            #send connect request
             conn.request("CONNECT", host + ":" + str(port))
 
-            # Get the response
+            #get the response
             response = conn.getresponse()
 
-            # Print the response status and headers
+            #print the response status and headers
             print("Response Status:", response.status)
             print("Response Headers:")
             for header, value in response.getheaders():
                 print(header + ": " + value)
 
-            # Prepare the GET request headers
+            #get request headers
             headers = {
                 "x-xbl-contract-version": "5",
                 "Accept-Encoding": "gzip, deflate",
@@ -41,10 +41,10 @@ def multi():
                 "Connection": "Keep-Alive"
             }
 
-            # Send the GET request
+            #sends the GET request
             conn.request("GET", "/users/xuid(" + individual_id + ")/people/social/decoration/detail,preferredColor,presenceDetail,multiplayerSummary", headers=headers)
 
-            # Get the response
+            #gets the response
             response = conn.getresponse()
 
             # Print the response status and headers
@@ -53,7 +53,6 @@ def multi():
             for header, value in response.getheaders():
                 print(header + ": " + value)
 
-            # Read and decode the response body
             response_body = response.read()
             if response.getheader("Content-Encoding") == "gzip":
                 response_body = gzip.GzipFile(fileobj=io.BytesIO(response_body)).read()
@@ -101,8 +100,6 @@ if check_file == False:
 else:
     print("database file found")
 
-#main function of the program
-
 head = {'Accept-Encoding': 'gzip, deflate',
         'accept-language': 'en-US',
         'authorization': token,
@@ -127,7 +124,6 @@ while True:
     continue_token = xuids['continuationToken']
     print("token: ", continue_token)
 
-    #loops through xuids
     with open("xuids.csv", 'a') as file:
         for comment in xuids['comments']:
             xuid = comment['xuid']
@@ -152,10 +148,9 @@ with open('xuids.csv', 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         for id in row:
-            # Create a connection to the host
-            conn = http.client.HTTPSConnection("social.xboxlive.com")
 
-            # Set the headers
+            conn = http.client.HTTPSConnection("social.xboxlive.com")
+            
             headers = {
                 "x-xbl-contract-version": "2",
                 "Accept-Encoding": "gzip, deflate",
@@ -167,13 +162,10 @@ with open('xuids.csv', 'r') as file:
                 "Connection": "Keep-Alive",
                 "Cache-Control": "no-cache",
             }
-
-            # Send the PUT request
+            
             conn.request("PUT", "https://social.xboxlive.com/users//xuid(2535409959180949)/people/xuid(" + id + ")", headers=headers)
             response = conn.getresponse()
             
-            # Print the response status
             print(response.status)
 
-            # Close the connection
             conn.close()
