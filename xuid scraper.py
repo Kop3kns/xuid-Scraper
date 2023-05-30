@@ -40,22 +40,36 @@ def multi():
 
             response = conn.getresponse()
 
-            print("Response Status:", response.status)
-            print("Response Headers:")
-            for header, value in response.getheaders():
-                print(header + ": " + value)
-
             response_body = response.read()
             if response.getheader("Content-Encoding") == "gzip":
                 response_body = gzip.GzipFile(fileobj=io.BytesIO(response_body)).read()
 
-                if response.status == 403:
-                    error_data = json.loads(response_body.decode())
-                    print("Error:", error_data["description"])
-                else:
-                    data = json.loads(response_body.decode())
-                    for person in data['people']:
-                        print(person)
+                try:
+                    if response.status == 403:
+                        error_data = json.loads(response_body.decode())
+                        print("Error:", error_data["description"])
+                        continue
+                    elif response.status == 429:
+                        retry_after = int(response.getheader("Retry-After", 15))
+                        print("Too many requests, retry after {} seconds".format(retry_after))
+                        time.sleep(retry_after)
+                        continue
+                    else:
+                        data = json.loads(response_body.decode())
+                        if 'people' in data:
+                            for person in data['people']:
+                                print(person)
+                        else:
+                            print("'people' key not found in the response data")
+                except Exception as e:
+                    print("Error occurred:", e)
+                    continue
+
+
+            print("Response Status:", response.status)
+            print("Response Headers:")
+            for header, value in response.getheaders():
+                print(header + ": " + value)
 
             print("Response Body:")
             print(response_body.decode())
