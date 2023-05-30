@@ -1,5 +1,5 @@
 # Xuid Scraper
-Scrapes xuids though group posts, searches xuids for friend xuids (partially works with only 3 requests before server blocks requests), add function is now fully functional (maximum friends on xbox is 1000).
+Scrapes xuids though group posts, searches scraped xuids for friend xuids, add function is now fully functional (maximum friends on xbox is 1000).
 
 To get rid of duplicate xuids copy the csv file and put it into a csv duplicate remover like https://www.anyjson.in/csv-remove-duplicates
 
