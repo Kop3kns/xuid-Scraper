@@ -82,7 +82,7 @@ def multi():
                     file.write(xuid + "\n")
                     print(xuid)
 
-            time.sleep(15)
+            time.sleep(10)
         conn.close()
 
     
