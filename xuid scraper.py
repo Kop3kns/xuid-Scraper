@@ -7,6 +7,80 @@ import gzip
 import io
 import csv
 import time
+import pandas as pd
+
+#globals
+print("Python xuid database tool\n")
+token = input("Enter XBL token: ")
+userpost = input("Enter group post url: ")
+
+def group_post(token, userpost):
+
+    continue_token = None
+
+    while True:
+
+        head = {'Accept-Encoding': 'gzip, deflate',
+            'accept-language': 'en-US',
+            'authorization': token,
+            'Host': 'comments.xboxlive.com',
+            'Connection': 'Keep-Alive'}
+
+        if continue_token == None:
+            r = requests.get(url = userpost, headers = head)
+            print("this is first response")
+        else:
+            r = requests.get(url = userpost + '&continuationToken=' + continue_token, headers = head)
+
+        xuids = json.loads(r.text)
+        print(r.text)
+        continue_token = xuids['continuationToken']
+        print("token: ", continue_token)
+
+        with open("xuids.csv", 'a') as file:
+            for comment in xuids['comments']:
+                xuid = comment['xuid']
+                file.write(xuid + "\n")
+        
+        if continue_token == None:
+            new_url = input("thats all of the xuids input y or n to restart or to not restart: ")
+            if new_url == 'y':
+                userpost = input("Enter group post url: ")
+                continue
+            else:
+                break
+        else:
+            continue
+
+def add_player(id):
+    conn = http.client.HTTPSConnection("social.xboxlive.com")
+
+    headers = {
+        "x-xbl-contract-version": "2",
+        "Accept-Encoding": "gzip, deflate",
+        "accept": "application/json",
+        "accept-language": "en-US",
+        "authorization": token,
+        "Host": "social.xboxlive.com",
+        "Content-Length": "0",
+        "Connection": "Keep-Alive",
+        "Cache-Control": "no-cache",
+    }
+
+    conn.request("PUT", "https://social.xboxlive.com/users//xuid(2535409959180949)/people/xuid(" + id + ")", headers=headers)
+    response = conn.getresponse()
+    
+    print(response.status)
+
+    conn.close()
+
+def remove_duplicates(csv_file):
+    df = pd.read_csv(csv_file, header=None)
+    header = df.iloc[0]
+    df = df[1:]
+    df.columns = header
+    df.drop_duplicates(keep='first', inplace=True)
+    df.to_csv(csv_file, index=False)
 
 def multi():
     for row in csv_reader:
@@ -32,7 +106,7 @@ def multi():
                 "accept": "application/json",
                 "accept-language": "en-US",
                 "authorization": token,
-                "Host": host,
+                "Host": "peoplehub.xboxlive.com",
                 "Connection": "Keep-Alive"
             }
 
@@ -43,27 +117,9 @@ def multi():
             response_body = response.read()
             if response.getheader("Content-Encoding") == "gzip":
                 response_body = gzip.GzipFile(fileobj=io.BytesIO(response_body)).read()
-
-                try:
-                    if response.status == 403:
-                        error_data = json.loads(response_body.decode())
-                        print("Error:", error_data["description"])
-                        continue
-                    elif response.status == 429:
-                        retry_after = int(response.getheader("Retry-After", 15))
-                        print("Too many requests, retry after {} seconds".format(retry_after))
-                        time.sleep(retry_after)
-                        continue
-                    else:
-                        data = json.loads(response_body.decode())
-                        if 'people' in data:
-                            for person in data['people']:
-                                print(person)
-                        else:
-                            print("'people' key not found in the response data")
-                except Exception as e:
-                    print("Error occurred:", e)
-                    continue
+            else:
+                print("Something went wrong")
+                continue
 
 
             print("Response Status:", response.status)
@@ -75,6 +131,10 @@ def multi():
             print(response_body.decode())
 
             data = json.loads(response_body)
+            
+            if 'people' not in data:
+                print("No 'people' in response data")
+                continue
 
             with open("xuids.csv", 'a') as file:
                 for person in data['people']:
@@ -85,12 +145,7 @@ def multi():
             time.sleep(10)
         conn.close()
 
-    
-
-print("Python xuid database tool\n")
-
-token = input("Enter XBL token: ")
-
+#checks for the xuid database file
 cwd = os.getcwd()
 check_file = (bool(os.path.isfile(cwd + "/xuids.csv")))
 
@@ -99,69 +154,25 @@ if check_file == False:
 else:
     print("database file found")
 
-head = {'Accept-Encoding': 'gzip, deflate',
-        'accept-language': 'en-US',
-        'authorization': token,
-        'Host': 'comments.xboxlive.com',
-        'Connection': 'Keep-Alive'}
+#group post scrape
+group_post(token, userpost)
 
-userpost = input("Enter group post url: ")
-continue_token = None
-
-while True:
-
-    if continue_token == None:
-        r = requests.get(url = userpost, headers = head)
-        print("this is first response")
-    else:
-        r = requests.get(url = userpost + '&continuationToken=' + continue_token, headers = head)
-
-    xuids = json.loads(r.text)
-    print(r.text)
-    continue_token = xuids['continuationToken']
-    print("token: ", continue_token)
-
-    with open("xuids.csv", 'a') as file:
-        for comment in xuids['comments']:
-            xuid = comment['xuid']
-            file.write(xuid + "\n")
-    
-    if continue_token == None:
-        new_url = input("thats all of the xuids input y or n to restart or to not restart: ")
-        if new_url == 'y':
-            userpost = input("Enter group post url: ")
-            continue
-        else:
-            break
-    else:
-        continue
+clean_file = input("do you wish to clean your xuid file y or n: ")
+if clean_file == 'y':
+    remove_duplicates('xuids.csv')
+    print("Reomved duplicates")
+else:
+    print("file may have duplicate xuids")
 
 with open('xuids.csv', 'r') as file:
     csv_reader = csv.reader(file)
-
     multi()
+
 
 with open('xuids.csv', 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         for id in row:
-            conn = http.client.HTTPSConnection("social.xboxlive.com")
+            add_player(id)
 
-            headers = {
-                "x-xbl-contract-version": "2",
-                "Accept-Encoding": "gzip, deflate",
-                "accept": "application/json",
-                "accept-language": "en-US",
-                "authorization": token,
-                "Host": "social.xboxlive.com",
-                "Content-Length": "0",
-                "Connection": "Keep-Alive",
-                "Cache-Control": "no-cache",
-            }
-
-            conn.request("PUT", "https://social.xboxlive.com/users//xuid(2535409959180949)/people/xuid(" + id + ")", headers=headers)
-            response = conn.getresponse()
-            
-            print(response.status)
-
-            conn.close()
+remove_duplicates('xuids.csv')
