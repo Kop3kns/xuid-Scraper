@@ -167,12 +167,3 @@ else:
 with open('xuids.csv', 'r') as file:
     csv_reader = csv.reader(file)
     multi()
-
-
-with open('xuids.csv', 'r') as file:
-    reader = csv.reader(file)
-    for row in reader:
-        for id in row:
-            add_player(id)
-
-remove_duplicates('xuids.csv')
