@@ -12,67 +12,6 @@ import pandas as pd
 #globals
 print("Python xuid database tool\n")
 token = input("Enter XBL token: ")
-userpost = input("Enter group post url: ")
-
-def group_post(token, userpost):
-
-    continue_token = None
-
-    while True:
-
-        head = {'Accept-Encoding': 'gzip, deflate',
-            'accept-language': 'en-US',
-            'authorization': token,
-            'Host': 'comments.xboxlive.com',
-            'Connection': 'Keep-Alive'}
-
-        if continue_token == None:
-            r = requests.get(url = userpost, headers = head)
-            print("this is first response")
-        else:
-            r = requests.get(url = userpost + '&continuationToken=' + continue_token, headers = head)
-
-        xuids = json.loads(r.text)
-        print(r.text)
-        continue_token = xuids['continuationToken']
-        print("token: ", continue_token)
-
-        with open("xuids.csv", 'a') as file:
-            for comment in xuids['comments']:
-                xuid = comment['xuid']
-                file.write(xuid + "\n")
-        
-        if continue_token == None:
-            new_url = input("thats all of the xuids input y or n to restart or to not restart: ")
-            if new_url == 'y':
-                userpost = input("Enter group post url: ")
-                continue
-            else:
-                break
-        else:
-            continue
-
-def add_player(id):
-    conn = http.client.HTTPSConnection("social.xboxlive.com")
-
-    headers = {
-        "x-xbl-contract-version": "2",
-        "Accept-Encoding": "gzip, deflate",
-        "accept": "application/json",
-        "accept-language": "en-US",
-        "authorization": token,
-        "Host": "social.xboxlive.com",
-        "Content-Length": "0",
-        "Connection": "Keep-Alive",
-        "Cache-Control": "no-cache",
-    }
-
-    conn.request("PUT", "https://social.xboxlive.com/users//xuid(2535409959180949)/people/xuid(" + id + ")", headers=headers)
-    response = conn.getresponse()
-    
-    print(response.status)
-
-    conn.close()
 
 def remove_duplicates(csv_file):
     df = pd.read_csv(csv_file, header=None)
@@ -153,9 +92,6 @@ if check_file == False:
     open("xuids.csv", 'x')
 else:
     print("database file found")
-
-#group post scrape
-group_post(token, userpost)
 
 clean_file = input("do you wish to clean your xuid file y or n: ")
 if clean_file == 'y':
