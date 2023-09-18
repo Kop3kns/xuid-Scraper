@@ -8,4 +8,4 @@ due to debugging print statements this program will use high ammounts of memory 
 after testing the scraper with no api request limit, you can expect a 500k XUID database within 4 hours. There are many uses for this data such as visualization of the types of games certain groups play. If you want the docs for the use cases it will be included here https://learn.microsoft.com/en-us/gaming/gdk/_content/gc/reference/live/gc-reference-live-toc
 
 # Fixed
-Ive found a workaround for the scraper and will push out a tutorial sometime in the future. For the time being, I will not release it because I don't want this method to get patched.
+Fiddler is now working again, I will upload some of my scripts that use this data for practical use.
